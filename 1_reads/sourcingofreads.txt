@@ -1,0 +1,226 @@
+A new pipeline.
+
+get WGS, RNA, WGBS, ATAC reads.
+
+WGS -> pangenie (uses inference from the pangenome to recover common variants, apparently don’t use imputation of haplotypes from pangenome?) -> OPTIONAL: vg giraffe + call (read pileup de novo variant calling) -> phase variants (SHAPEIT, jana ebler recommended! can handle read-based phasing + custom pedigree info) -> bcftools consensus (can apparently handle SVs! YOU NEED TO PROVE THAT. create a bunch of linear assemblies and drop out regions that are unphasable) -> minigraph cactus (give it to john and co., creates a multiple sequence alignment along with paths for each haplotype (the empty regions in the linear assemblies are just refs, and the W-paths should preserve your phasing info)
+
+Then go onto:
+- RNA-seq mapping and haplotype specific transcript abundance estimation (vg mpmap and RPVG)
+- WGBS mapping and haplotype specific peak calling (methylGrapher, PROVE THAT IT CAN DO IT HAP SPECIFIC, OR THAT IT REFERENCES PAT
+- ATAC mapping (use the linear assemblies to do AIAP?, but how to compare? can you re-inject to graph? MUST ASK JUAN)
+
+then you can do ASE!
+
+today: learn SHAPE-IT on hold: need to find out if it can handle SVs, and how it does that
+	need to knows:
+		- comparisons to other phasers:
+			- https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007308#sec002 -> seems like SHAPE-IT is gold standard but this analysis was only done in SNVs…
+			- readbackedphasing and phasebytransmission from GATK not included, do they work…?
+		- how the algorithm works
+			- this is the HMM based method that instead represents the haplotype matrix H as a graph, and also has a better sampler so it’s faster
+		- what the format/type of data it’s expecting
+			- warning: depends on ShapeIt 2 or 4, need to wait on juan!
+		- can SHAPEIT handle structural variants and de novo variants?
+			- https://github.com/odelaneau/shapeit4/issues/81 (can use it for SVs? how?)
+			- https://www.nature.com/articles/s41467-017-01343-4#Sec11
+				- this paper did not use Shape-it to phase SVs, even though it did use it, and it had its own custom SV phasing algo
+			- https://www.sciencedirect.com/science/article/pii/S0092867422009916?via%3Dihub
+				- THIS IS HGSVC! seems like they used ShapeIt to phase the SVs…? please check!
+					- they use shapeit v2 for SNVs, but then shapeit v4 for SVs…?
+			- https://web.archive.org/web/20240917145756/https://odelaneau.github.io/shapeit5/docs/documentation/phase_common/
+				- This is the documentation of the dead Shape-It 5
+				- “Tool to phase rare variants onto a scaffold of common variants (output of phase_common + ligate). We recommend to use phase_rare for datasets with a sample size greater than 2,000 samples. For smaller smaple sizes, phase_common could do the job.”
+					- “Tool to phase common variant sites, typically SNP array data (i.e. prephasing). This tool is also used as the first step for phasing large WES/WGS datasets. This is an improved version of SHAPEIT4 and should serve as a replacement.” (you should use Shape-It 4!)
+		- how to include read-aware phasing
+		- how to include pedigree data
+		- how to log things
+
+
+bcftools consensus:
+	- can it handle SVs?
+		- https://samtools.github.io/bcftools/bcftools.html#consensus has options for insertions and deletions…
+		- https://www.biostars.org/p/134834/ claims that consensus can’t handle large SVs
+		- take it on good authority from juan? you will need to be able to check for the presence and absence of SVs
+
+
+
+
+
+
+
+
+Open questions before implementation for each step of the pipeline. Derived from the science notebook—when a question is answered, provide that answer here and change the color of the underline from red to green.
+1. WGS + fastQC
+	- where to get the reads from?
+		- got reads for:
+			- WGS: /lodge/data/kquaid/IPS_GEIC/WGS/MGI
+			- RNA: /scratch/kquaid/IPS_GEIC/rna_seq/0_fastq2
+			- ATAC: /scratch/kquaid/atran_atac
+		- OPEN QUESTION: Missing reads:
+			- WGBS: /lodge/data/kquaid/IPS_GEIC/wgbs (best source, but I can’t interpret any of the data names)
+3. PanGenie
+	- compute?
+		- https://static-content.springer.com/esm/art%3A10.1038%2Fs41588-022-01043-w/MediaObjects/41588_2022_1043_MOESM1_ESM.pdf
+			- from the pangenie paper. supplementary table 5
+			- ignore the “total” compute, that’s for creating the VCF that you genotype from, but of course you are sourcing that straight from the pangenome
+			- the pangenie method uses 26 reference haplotypes, pangenome is 90 (https://github.com/human-pangenomics/hpp_pangenome_resources/blob/main/README.md)
+			- compute resources for the pangenie:
+				- provided in pangenie.sh. it’s pretty light :)
+5. bcftools concat
+	- compute?
+		- very fast without compression (i.e. naive), run on wang lab servers
+	- go through documentation and find any caveats
+		- make sure the vcfs have the same sample columns in the right order
+		- must sort the vcfs first (by chr and position)
+		- based off of: https://www.biostars.org/p/371016/:
+			- allow-overlaps flag is a-ok, just means you can interleave the input VCFs to get the new VCF that’s nice and sorted, no extra sorting step
+			- —remove-duplicates good idea as well
+		- we’ll probably need the output VCF uncompressed too, so —naive flag is good. can always compress later
+			- should also check that the header is the same with bash magic
+		- don’t need ligation because we haven’t phased yet at this point
+6. ShapeIt
+	- can ShapeIt handle SVs?
+		- yes, please include new HGSVC vcf as a reference panel!
+	- what is the genetic “map”? can i get that data source from somewhere else/can I verify its provenance?
+	- compute?
+		- very light compute, mentioned in 4_shapeit/shapeit.sh 
+	- go through documentation and find any caveats
+		- must set up chunk and ligate along with array jobs!
+7. bcftools consensus
+	- how exactly does bcftools split on haplotype?
+	- can bcftools consensus handle structural variants?
+		- how can I verify that?
+	- how can I remove parts from the linear assembly with unphasable variants?)
+	- compute?
+	- go through documentation and find any caveats
+8. Minigraph-cactus
+	- can you confirm that your linear assemblies (with missing pieces for unphasable variants) create gapped W-paths?
+		- how can you verify this?
+10. vg indexing
+	- what files do you need for vg mpmap that can’t be downloaded?
+	- compute?
+11. vg mpmap
+	- what indices do you need? should you just run vg index -rna? if so, on the karagraph?
+12. RPVG
+	- how are transcripts assigned? are they assigned to each path in the karagraph?
+
+
+to do:
+- ask juan about the compute stuff?
+- look through shapeit
+
+
+
+
+
+bold steps are things you need to ask Juan about
+
+reads -> count kmers -> kmers -> Pangenie genotype imputation -> VCF -> SHAPEIT5 + pedigree info -> phased VCF
+-> prune VCF of unphased sites -> pruned VCF -> bcftools consensus -> haplotigs -> construct shared graph
+-> align to individual haplotigs -> hap-specific alignments -> align to shared graph -> shared alignment -> categorize reads in shared alignment
+-> subtract reads from hap-specific alignments -> call variants from hap-specific alignments
+-> bcftools consensus for hap-specific alignments -> hap-specific personalized alignments
+
+the issue is that lineage-based phasing works off of variants. it can only use rare variants.
+- VCF -> stat phasing -> phased VCF
+- reads + haplotigs -> read phasing -> read-based phasing
+
+
+
+
+1. A set of variants describes a contig.
+2. A contig determines alignments.
+3. Alignments inform a set of variants.
+
+Phasing is simply an additional standard for the precision of a contig to the molecule we are measuring.
+
+How do we start the cycle?
+	- Instead of aligning, we impute directly from a reference (3). This generates a fuzzy callset of variants.
+	- We then phase those variants using statistical and lineage information. This generates two sets of phased variants.
+	- Each set of variants then describes a haplotig (1), which is precise to the level of haplotype.
+	- We then align to individual and pooled haplotigs (2). We recognize that the difference in contig contexts creates differences in alignments, which we use to phase reads.
+	- We now have two sets of reads, each determined by phased contigs.
+	- We use each set of reads to inform phased variants (3).
+
+Increasing levels of alignment precision
+Consensus reference -> genotype imputed reference -> relatives reference -> personal reference
+
+
+
+
+
+
+
+
+
+
+
+
+
+scp -r atran@10.20.127.3:DIRECTORY atran@10.20.127.50:/scratch/atran/final/1_reads/wgs
+
+
+
+scp atran@10.20.127.3:/lodge/data/kquaid/IPS_GEIC/WGS/MGI/*MGI*.gz atran@10.20.127.50:/scratch/atran/final/1_reads/wgs/
+
+scp -r atran@10.20.127.3:/scratch/kquaid/IPS_GEIC/rna_seq/0_fastq2 atran@10.20.127.50:/scratch/atran/final/1_reads/rna/
+
+scp atran@10.20.127.3:/scratch/kquaid/atran_atac/*.fastq.gz atran@10.20.127.50:/scratch/atran/final/1_reads/atac
+
+F1_1_WGS_MGI_L001_R1.fastq.gz                                          100%   11GB  12.5MB/s   14:33    
+F1_1_WGS_MGI_L001_R2.fastq.gz                                          100%   11GB  13.3MB/s   14:33    
+F1_2_WGS_MGI_L001_R1.fastq.gz                                          100%   11GB  12.6MB/s   14:22    
+F1_2_WGS_MGI_L001_R2.fastq.gz                                          100%   11GB  11.4MB/s   16:45    
+F1_3_WGS_MGI_L001_R1.fastq.gz                                          100% 9696MB  13.1MB/s   12:20    
+F1_3_WGS_MGI_L001_R2.fastq.gz                                          100%   10GB  12.6MB/s   13:40    
+F2_1_WGS_MGI_L001_R1.fastq.gz                                          100%   36GB  13.3MB/s   45:45    
+F2_1_WGS_MGI_L001_R2.fastq.gz                                          100%   38GB  12.7MB/s   50:37    
+M1_1_WGS_MGI_L001_R1.fastq.gz                                            2%  331MB  10.9MB/s   22:39 ETA^
+scp atran@10.20.127.3:/lodge/data/kquaid/IPS_GEIC/WGS/MGI/M1*MGI*.gz atran@10.20.127.50:/scratch/atran/final/1_reads/wgs/
+more to do!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+italics denote pseudocode
+
+awk ‘BEGIN {
+	for sample in samples:
+		for param1 in param1set:
+			for param2 in param2set:
+				print(sample param1 param2\n)
+}
+
+For multi-parameter commands we’ll need to do this to assign one giant array job.
+
+What about generating the paramsets ourselves?
+	- e.g. splitting the vcfs:
+		- need to split on chromosome, should be easy to pass param1set as something like 1-23
+		- need to split on sections of the chromosome
+			- splitNTimesWithOverlaps(n, overlap, lenString)
+				- immediately remove (n-1) * overlap from lenString = lenDivisible
+				- remaining strings should all lenDivisible/n = lenLeft
+				- e.g. for n=3, lenLeft + overlap + lenLeft + overlap + lenLeft = n.
+					- and you should output the coordinates [0, lenLeft + overlap], [lenLeft, 2lenLeft + 2overlap], [2lenLeft+overlap, 3lenLeft + 2overlap]
+						- basically start at 0, and the end should be lenLeft + overlap
+						- then iterate forward. take away overlap from the end coord of the previous
+					- 0-index n. LEFT = lenLeft(n) + overlap(n-1) …… RIGHT = 
+
+
+
+
+
+
+
+
+

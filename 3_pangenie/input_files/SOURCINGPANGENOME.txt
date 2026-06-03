@@ -1,0 +1,19 @@
+To handle multiple variants within one bubble (characteristic of large graphs like the HPRC), you'll need to check the HPRC analysis guide in the PanGenie wiki:
+https://github.com/eblerjana/pangenie/wiki/A:--Genotyping-variation-nested-inside-of-bubbles
+
+The "graph-VCF" is the multi-allelic version, while the "callset-VCF" is the bi-allelic version. 
+
+You will also need to find the right linear reference to do the same genotyping that they did in the HPRC paper, Liao et al.
+ 
+If you cntrl-f "Pangenie" here:
+https://github.com/human-pangenomics/hpp_pangenome_resources
+ 
+You get a bitbucket repository for the Pangenie CHM13 workflow for the HPRC:
+https://bitbucket.org/jana_ebler/hprc-experiments/src/chm13-based-pipeline/genotyping-experiments/
+(note: if you read the Nature paper, the Pangenie experiments shown there match up with what's described in this workflow)
+ 
+Then you can find the reference fasta in the Snakemake rules that define inputs to this pipeline here:
+https://bitbucket.org/jana_ebler/hprc-experiments/src/chm13-based-pipeline/genotyping-experiments/workflow/rules/download-reference.smk
+
+You'll see that you download the Y inclusive v1.1 fasta.
+wget -O {output} https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph/CHM13v11Y.fa.gz

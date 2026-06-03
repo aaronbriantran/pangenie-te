@@ -1,0 +1,7 @@
+1. organize all of your reads
+2. wgs fastqc
+3. pangenie inference
+4. phase via shapeit
+5. bcftools consensus into fuzzy haplotypes
+6. read phasing by aligning to pooled haplotypes
+7. need to figure out lineage based read phasing
