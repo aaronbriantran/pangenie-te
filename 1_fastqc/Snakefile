@@ -1,0 +1,25 @@
+rule all:
+   input:
+      directory("results/multiqc")
+
+rule fastqc:
+   input:
+      #"../data/{sample}.fastq" #incorrect dummy input, you need to figure this out from input functions, lists, yaml, etc.
+   output:
+      directory("results/fastqc")
+   log:
+      "logs/fastqc.log"
+   shell:
+      bash scripts/fastqc.sh {input} {output} {log}
+
+rule multiqc:
+   input:
+      directory("results/fastqc")
+   output:
+      directory("results/multiqc")
+   params:
+      multiqc_env="config/multiqc.yml"
+   log:
+      "logs/multiqc.log"
+   shell:
+      bash scripts/multiqc.sh {input} {output} {params.multiqc_env} {log}
