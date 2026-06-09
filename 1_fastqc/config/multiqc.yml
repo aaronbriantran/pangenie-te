@@ -1,0 +1,3 @@
+name: multiqc
+dependencies:
+ - multiqc

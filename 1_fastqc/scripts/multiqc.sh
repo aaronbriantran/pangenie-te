@@ -10,7 +10,7 @@
 
 #logic for creating conda environments if they aren't in your environment list
 if conda info --envs | grep -q multiqc; then
-   conda create --file "$3"
+   conda env create --file "$3"
 fi
 
 conda activate multiqc
