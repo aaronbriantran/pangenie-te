@@ -17,4 +17,4 @@ fastqc \
    --extract \
    --delete \
    --threads number of threads \
-   "$1" &> "$3"
+   "$1" &> "$3"/fastqc.log
