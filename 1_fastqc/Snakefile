@@ -4,7 +4,7 @@ rule all:
 
 rule fastqc:
    input:
-      #"../data/{sample}.fastq" #incorrect dummy input, you need to figure this out from input functions, lists, yaml, etc.
+      expand("../data/{sample}.fastq", sample=SAMPLES)
    output:
       directory("results/fastqc")
    log:

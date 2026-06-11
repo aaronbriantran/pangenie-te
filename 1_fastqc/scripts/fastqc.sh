@@ -2,8 +2,8 @@
 
 #author Aaron Tran
 #date 8 June 2026
-#use This script runs fastqc on a given fasta file
-#input $1 is a given fastq file (so it does not measure pairs of files)
+#use This script runs fastqc on fasta files
+#input $1 is either a single fasta file or a space-delimited list of files (note that it does not pair files up)
 #output an unzipped report; its output directory is given as $2
 #args $3 is the log directory
 #compute 10 cores, 1400 Mb, maybe 5-10 minutes per file?, taken from https://rcs.ucalgary.ca/Bioinformatics_applications
