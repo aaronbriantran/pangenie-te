@@ -6,14 +6,7 @@
 #input $1 is the results directory of the FastQC reports
 #output $2 is the output directory for where MultiQC should put its reports
 #args $3 is the environment yaml file for the conda environment that wraps multiqc, $4 is the log directory
-#compute 10 cores, 1400 Mb, maybe 5-10 minutes per file? inherited directly from fastqc.sh
-
-#logic for creating conda environments if they aren't in your environment list
-if conda info --envs | grep -q multiqc; then
-   conda env create --file "$3"
-fi
-
-conda activate multiqc
+#compute it looks like MultiQC has no multithreading, so one thread and maybe 10 minutes?
 
 #run multiqc
 #-n is the name of the report, -o is the output directory (in results), -m is the module

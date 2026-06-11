@@ -9,8 +9,12 @@ rule fastqc:
       directory("results/fastqc")
    log:
       "logs/fastqc.log"
+   threads: 10
+   resources:
+      runtime: 10 #in minutes
+      mem_mb: 1500 #in mb
    shell:
-      bash scripts/fastqc.sh {input} {output} {log}
+      bash scripts/fastqc.sh {input} {output} {log} {threads}
 
 rule multiqc:
    input:
@@ -21,5 +25,11 @@ rule multiqc:
       multiqc_env="config/multiqc.yml"
    log:
       "logs/multiqc.log"
+   threads: 1
+   resources:
+      runtime: 10
+      mem_mb: 300
+   conda:
+      "config/multiqc.yml"
    shell:
       bash scripts/multiqc.sh {input} {output} {params.multiqc_env} {log}
