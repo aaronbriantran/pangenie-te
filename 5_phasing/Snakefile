@@ -1,0 +1,55 @@
+SAMPLES = ["some list of strings", "here's another string!"]
+INPUT_DIR = "some/string/for/paths/to/vcf/for/example..."
+
+rule all:
+   input:
+      "a phased VCF that is combined across samples"
+
+rule index_vcfs:
+   input:
+      "{INPUT_DIR}/{sample}.vcf"
+   output:
+      "results/index_vcfs/{sample}.vcf."
+   log:
+      "logs"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      "bgzip -c --threads {threads} {input} > {input}.gz" #need to ml samtools/1.18!
+
+rule combine_vcfs:
+   input:
+      expand(the sample vcfs, SAMPLE=SAMPLES)
+   output:
+      "combined.bcf", #turn a bunch of vcfs into a combined bcf
+      "combined.bcf.csi"
+   log:
+      "logs"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      "find {INPUT_DIR} -name "*.vcf" | xargs bcftools merge --threads -m none -O b -W > {output}" #-m none means no multiallelics, -W forces index to be written, output in bcf format to stdout
+
+rule split_for_common_phasing:
+   input:
+      "combined.bcf"
+   output:
+      expand(a bunch of chunks, CHUNK=number, CHR=another number) #generate chunks using bedtools and iterating
+
+rule common_phasing:
+   input:
+      "one of the chunks, use wildcards"
+   output:
+      "the phased chunk, make sure to use wildcards to name chr and chunk"
+
+rule common_variant_ligation:
+   input:
+      expand(a bunch of phased chunks, make sure to name them differently, use the WILDCARD of chromosome here to do the merging per chromosome, CHUNK=num) #make sure to sort the input when you get it!
+   output:
+      "ligated{chr}.bcf, for example" #make sure to use --pedigree!
+
+#use rare variants as scaffold?
