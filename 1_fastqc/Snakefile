@@ -16,7 +16,18 @@ rule fastqc:
       runtime=10, #in minutes
       mem_mb=1500 #in mb
    shell:
-      "bash scripts/fastqc.sh {input} {output} {log} {threads}"
+      """
+      ml fastqc/0.12.1
+
+      #runs the fastqc
+      # -o takes output directory, --extract unzips output reports, --delete removes zipped reports after, file taken as an argument
+      fastqc \
+         -o {output} \
+         --extract \
+         --delete \
+         --threads {threads} \
+         {input} &>> {log}
+      """
 
 rule multiqc:
    input:
