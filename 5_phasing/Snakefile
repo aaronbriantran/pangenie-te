@@ -12,7 +12,7 @@ rule index_vcfs:
       gz = "results/index_vcfs/{sample}.vcf.gz"
       csi = "results/index_vcfs/{sample}.vcf.gz.csi"
    log:
-      "logs"
+      "logs/index_vcfs.log"
    threads: 9999
    resources:
       runtime=9999
@@ -31,7 +31,7 @@ rule combine_vcfs:
       bcf = "results/combine_vcfs/combined.bcf", #turn a bunch of vcfs into a combined bcf
       csi = "results/combine_vcfs/combined.bcf.csi"
    log:
-      "logs"
+      "logs/combine_vcfs.log"
    threads: 9999
    resources:
       runtime=9999
@@ -45,32 +45,51 @@ rule combine_vcfs:
       -o {output.bcf} {input.gz} 2> {log}
       """
 
-checkpoint 
-
-rule split_for_common_phasing:
+rule split_and_common_phasing:
    input:
-      "combined.bcf"
+      "results/combine_vcfs/combined.bcf"
    output:
-      expand(a bunch of chunks, CHUNK=number, CHR=another number) #generate chunks using bedtools and iterating
+      "results/split_and_common_phasing/combined_chr{chr}_{begin}_{end}.bcf"
    log:
-      "logs"
+      "logs/split_and_common_phasing.log"
    threads: 9999
    resources:
       runtime=9999
       mem_mb=9999
-   shell:
+   shell: #want input directives or known variables for haplotype reference, genetic map, and pedigree file?
       """
-      use bedtools makewindows to create overlapping windows
-      while loop over each line of the bedtools output:
-         phase_common --input array/target.family.bcf --pedigree info/target.family.fam --region 1 --map info/chr1.gmap.gz --output target.phased.bcf --thread 8
-         outputs should be sortable by ls -1v
+      phase_common \
+         --input {input} \
+         --region {chr} \
+         --reference ???? \
+         --map "inputs/chr{chr}.gmap.gz" \
+         --pedigree ???? \
+         --output {output} \
+         --threads {threads} 2> {log}
       """
 
+#expects a wildcards argument (required by Snakemake) and a string that describes the file location of the bedtools makewindows output
+#runs through the output line by line and converts "chr1 10 20" to "chr1_10_20"
+#adds the sample wildcard to manage the aggregation and prevent aggregation between samples, etc.
+#returns a list of all of these values
+#as an input function, this should occur at DAG time
+def get_bedtools_windows(wildcards, bedtools_file):
+   windows_list = []
+   file = open(bedtools_file, "r")
+   for line in file:
+      input_file = os.path.join(FILE_PATH, "combined_" + "_".join(line.strip().split(" "))) #os.path.join? how to correctly combine pathnames and strings?
+      windows_list.append()
+   file.close()
+   return windows_list
+
+#request chunks for all windows from split_and_common_phasing
+#aggregate the names of those chunk files as a string and convert to a nice list
+#???? NEEDS TO HAPPEN PER CHROMOSOME! SO YOU'LL NEED TO SPLIT SAMPLES AND WHATNOT
 rule common_variant_ligation:
    input:
-      expand(a bunch of phased chunks, make sure to name them differently, use the WILDCARD of chromosome here to do the merging per chromosome, CHUNK=num) #make sure to sort the input when you get it!
+      get_bedtools_windows(wildcards, COMMON_WINDOWS_FILE)
    output:
-      "ligated{chr}.bcf, for example" #make sure to use --pedigree!
+      "ligated{chrnumber}.bcf, for example" #make sure to use --pedigree!
    log:
       "log"
    threads: 9999
@@ -79,6 +98,35 @@ rule common_variant_ligation:
       mem_mb=9999
    shell:
       """
-      ls -1v tmp/target.scaffold.chunk*.bcf > tmp/files.txt
-      ligate --input tmp/files.txt --output tmp/target.scaffold.bcf --thread 8 --index
+      echo "{input}" | sed 's/ /\n/g' | sort -t "_" -k1,1 -k2,2n > tmp/common_phase_chunks.txt
+
+      ligate \
+         --input tmp/common_phase_chunks.txt \
+         --output ligated{chr}.bcf \
+         --thread 8 \
+         --index \
+         --pedigree
+      """
+
+rule split_and_rare_phasing:
+   input:
+      windows=get_bedtools_windows(wildcards, RARE_WINDOWS_FILE)
+      combined=combined.bcf
+      scaffold=????
+   output:
+   log:
+      "logs"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      """
+      phase_rare \
+         --input {input.combined} \
+         --scaffold {input.scaffold} \
+         --map ???? \
+         --input-region ???? \
+         --scaffold-region ???? \
+         --
       """
