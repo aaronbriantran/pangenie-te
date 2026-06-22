@@ -9,7 +9,8 @@ rule index_vcfs:
    input:
       "{INPUT_DIR}/{sample}.vcf"
    output:
-      "results/index_vcfs/{sample}.vcf."
+      gz = "results/index_vcfs/{sample}.vcf.gz"
+      csi = "results/index_vcfs/{sample}.vcf.gz.csi"
    log:
       "logs"
    threads: 9999
@@ -17,14 +18,18 @@ rule index_vcfs:
       runtime=9999
       mem_mb=9999
    shell:
-      "bgzip -c --threads {threads} {input} > {input}.gz" #need to ml samtools/1.18!
+      """
+      bgzip -c --threads {threads} {input} > {output.gz} 2> {log}
+      bcftools index --threads {threads} {output.gz} > {output.csi} 2>> {log}
+      """ #WARNING: need to ml samtools/1.18!
 
 rule combine_vcfs:
    input:
-      expand(the sample vcfs, SAMPLE=SAMPLES)
+      expand("results/index_vcfs/{sample}.vcf.gz", sample=SAMPLES)
+      expand("results/index_vcfs/{sample}.vcf.gz.csi", sample=SAMPLES)
    output:
-      "combined.bcf", #turn a bunch of vcfs into a combined bcf
-      "combined.bcf.csi"
+      bcf = "results/combine_vcfs/combined.bcf", #turn a bunch of vcfs into a combined bcf
+      csi = "results/combine_vcfs/combined.bcf.csi"
    log:
       "logs"
    threads: 9999
@@ -32,24 +37,48 @@ rule combine_vcfs:
       runtime=9999
       mem_mb=9999
    shell:
-      "find {INPUT_DIR} -name "*.vcf" | xargs bcftools merge --threads -m none -O b -W > {output}" #-m none means no multiallelics, -W forces index to be written, output in bcf format to stdout
+      # -m none for no multiallelics, -W write csi index
+      """
+      bcftools merge --threads {threads} \
+      -m none \
+      -W \
+      -o {output.bcf} {input.gz} 2> {log}
+      """
+
+checkpoint 
 
 rule split_for_common_phasing:
    input:
       "combined.bcf"
    output:
       expand(a bunch of chunks, CHUNK=number, CHR=another number) #generate chunks using bedtools and iterating
-
-rule common_phasing:
-   input:
-      "one of the chunks, use wildcards"
-   output:
-      "the phased chunk, make sure to use wildcards to name chr and chunk"
+   log:
+      "logs"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      """
+      use bedtools makewindows to create overlapping windows
+      while loop over each line of the bedtools output:
+         phase_common --input array/target.family.bcf --pedigree info/target.family.fam --region 1 --map info/chr1.gmap.gz --output target.phased.bcf --thread 8
+         outputs should be sortable by ls -1v
+      """
 
 rule common_variant_ligation:
    input:
       expand(a bunch of phased chunks, make sure to name them differently, use the WILDCARD of chromosome here to do the merging per chromosome, CHUNK=num) #make sure to sort the input when you get it!
    output:
       "ligated{chr}.bcf, for example" #make sure to use --pedigree!
-
-#use rare variants as scaffold?
+   log:
+      "log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      """
+      ls -1v tmp/target.scaffold.chunk*.bcf > tmp/files.txt
+      ligate --input tmp/files.txt --output tmp/target.scaffold.bcf --thread 8 --index
+      """
