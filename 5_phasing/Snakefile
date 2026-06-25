@@ -178,6 +178,7 @@ rule concat_chrs:
       ml samtools/1.18
       ml bcftools/1.18
 
+      mkdir tmp
       echo "{input.bcf}" | sed 's/ /\n/g' | sort -t "_" -k3,3n > tmp/input_bcf.txt
 
       bcftools concat \
