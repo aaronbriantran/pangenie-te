@@ -151,7 +151,7 @@ rule phase_common:
          --reference {input.panel} \
          --map {input.map_file} \
          --pedigree {input.pedigree} \
-         --region {wildcards.chr} \
+         --region chr{wildcards.chr} \
          --output {output.bcf} \
          --log {log} \
          --thread {threads}
