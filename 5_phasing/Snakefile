@@ -96,7 +96,7 @@ rule split_target_by_chr:
       ml bcftools/1.18
       bcftools view \
          --threads {threads} \
-         -r {wildcards.chr} \
+         -r chr{wildcards.chr} \
          --write-index \
          -Ob -o {output.bcf} {input.bcf} 2> {log}
       """
@@ -119,7 +119,7 @@ rule split_panel_by_chr:
       ml samtools/1.18
       ml bcftools/1.18
       bcftools view --threads {threads} \
-         -r {wildcards.chr} \
+         -r chr{wildcards.chr} \
          --write-index \
          -Ob -o {output.bcf} {input.panel} 2> {log}
       """
