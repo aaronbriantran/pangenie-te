@@ -5,7 +5,7 @@ This step takes the total VCFs, including SNPs, indels, and TEs, and phases them
 
 This step uses the following modules:
 * SHAPEIT5
-* bcftools
+* bcftools/1.18
 * samtools/1.18
 
 Input:

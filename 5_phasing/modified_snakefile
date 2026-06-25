@@ -1,0 +1,229 @@
+"""
+ merge VCFs into a singular VCF
+ split VCF by chrs
+ for each CHR, split into common chunks
+ phase each chunk
+ ligate chunks together and create a CHR scaffold
+ create rare chunks
+ phase directly onto scaffold
+ sort and bcftools concat
+ """
+
+SAMPLES=["F1", "F2", "M1"]
+
+rule all:
+   input:
+      "results/phased_complete.bcf"
+
+rule index_vcfs:
+   input: 
+      "3_pangenie/something????/{sample}.vcf"
+   output:
+      gz = "results/index_vcfs/{sample}.vcf.gz"
+      csi = "results/index_vcfs/{sample}.vcf.gz.csi"
+   log:
+      "logs/index_vcfs.log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      """
+      ml samtools/1.18
+      ml bcftools/
+      bgzip -c --threads {threads} {input} > {output.gz} 2> {log}
+      bcftools index --threads {threads} {output.gz} > {output.csi} 2>> {log}
+      """
+
+rule combine_vcfs:
+   input:
+      gz = expand("results/index_vcfs/{sample}.vcf.gz", sample=SAMPLES)
+      csi = expand("results/index_vcfs/{sample}.vcf.gz.csi", sample=SAMPLES)
+   output:
+      bcf = "results/combine_vcfs/combined.bcf", #turn a bunch of vcfs into a combined bcf
+      csi = "results/combine_vcfs/combined.bcf.csi"
+   log:
+      "logs/combine_vcfs.log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      # -m none for no multiallelics, -W write csi index
+      """
+      ml samtools/1.18
+      bcftools merge --threads {threads} \
+      -m none \
+      -W \
+      -o {output.bcf} {input.gz} 2> {log}
+      """
+
+checkpoint create_common_chunks:
+   input:
+      panel="inputs/pangenie.vcf????"
+      map_file="inputs/maps/chr{chr}.gmap.gz"
+   output:
+      "results/create_common_chunks/common_chunks_chr{chr}.txt"
+   log:
+      "logs/create_common_chunks.log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      #window refers to the size of the chunk. SHAPEIT says it's good practice to do 20 cM
+      #buffer refers to the size of overlaps between chunks. SHAPEIT thinks 2 Mb, about 2 cM is good
+      #sequential is recommended by GLIMPSE
+      """
+         ????/GLIMPSE2_chunk \
+            --input {input.panel} \
+            --map {input.map_file} \
+            --region chr{chr} \
+            --sequential \
+            --window-cm 20 \
+            --buffer-cm 2 \
+            --output {output} \
+            --log {log} \
+            --threads {threads}
+      """
+
+rule phase_common:
+   input:
+      panel="inputs/pangenie.vcf" #need to compress to bcf...???? also right file path????
+      map_file="inputs/maps/chr{chr}.gmap.gz"
+      genotype="results/combine_vcfs/combined.bcf"
+      pedigree="????"
+   output:
+      "results/phase_common/{chr}/{coords}_common.bcf" #???? thinking about passing the coords wildcard...
+   shell:
+      """
+         ??? have to build binaries yourself
+         phase_common \
+            --input {input.genotype} \
+            --reference {input.panel} \
+            --map {input.map_file} \
+            --pedigree {input.pedgree} \
+            --region chr{chr} \
+            --output {output} \
+            --log {log} \
+            --threads {threads} \
+      """
+
+def parse_coords(wildcards, chk, filepath):
+   coordlist=[]
+   with chk.get(chr=wildcards.chr).output[0].open() as f:
+      for line in f:
+         line_arr = line.strip().split(" ")
+         coordlist.append(line_arr[-1]) #what does the output of GLIMPSE look like...????
+   return coordlist
+
+def parse_common_coords(wildcards):
+   return parse_coords(wildcards, chk=checkpoints.create_common_chunks)
+
+def parse_rare_coords(wildcards):
+   return parse_coords(wildcards, chk=checkpoints.create_rare_chunks)
+
+rule ligate_common_chunks:
+   input:
+      chunks=expand("results/phase_common/{chr}/{coords}_common.bcf", coords=parse_common_coords(wildcards), allow_missing=True)
+      pedigree="????"
+   output:
+      "results/ligate_common_chunks/ligated_{chr}.bcf"
+   log:
+      "log/ligate_common_chunks.log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      """
+         echo "{input.chunks}" | sed 's/ /\n/g' | sort -t "_" -k1,1 -k2,2n > results/ligate_common_chunks/common_phase_chunks_{chr}.txt
+
+         ????/ligate \
+         --input results/ligate_common_chunks/common_phase_chunks_{chr}.txt \
+         --output {output} \
+         --pedigree {input.pedgree} \
+         --thread {threads} \
+         --log {log}
+
+         cat results/ligate_common_chunks/common_phase_chunks_{chr}.txt >> {log}
+      """
+
+checkpoint create_rare_chunks:
+   input:
+      panel="inputs/pangenie.vcf"
+      map_file="inputs/maps/chr{chr}.gmap.gz"
+   output:
+       "results/create_common_chunks/rare_chunks_chr{chr}.txt"
+   log:
+      "log/create_rare_chunks.log"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   shell:
+      #window refers to the size of the chunk. SHAPEIT says it's good practice to do 5 Mb, in "UK Biobank WGS data"
+      #do I need a buffer? phase_rare ignores buffers
+      """
+         ????/GLIMPSE2_chunk \
+            --input {input.panel} \
+            --map {input.map_file} \
+            --region chr{chr} \
+            --sequential \
+            --window-mb 5 \
+            --buffer-mb ???? \
+            --output {output} \
+            --log {log} \
+            --threads {threads}
+      """
+
+rule phase_rare:
+   input:
+      panel="inputs/pangenie.vcf" #need to compress to bcf...???? also right file path????
+      map_file="inputs/maps/chr{chr}.gmap.gz"
+      genotype="results/combine_vcfs/combined.bcf"
+      pedigree="????"
+   output:
+      "results/phase_rare/{chr}/{coords}_rare.bcf"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   log:
+      "log/phase_rare.log"
+   shell:
+      """
+         ????/phase_rare \
+            --input {input.genotype} \
+            --input-region ???? \
+            --scaffold {input.scaffold} \
+            --scaffold-region ???? \
+            --map {input.map_file} \
+            --pedigree {input.pedigree} \
+            --output {output} \
+            --log {log} \
+            --thread {threads}
+      """
+
+rule sort_and_concat_rare:
+   input:
+      expand("results/phase_rare/{chr}/{coords}_rare.bcf", coords=parse_rare_coords(wildcards, "results/create_rare_chunks/"), allow_missing=True)
+   output:
+      "results/sort_and_concat_rare/phased_chr{chr}.bcf"
+   threads: 9999
+   resources:
+      runtime=9999
+      mem_mb=9999
+   log:
+      "log/phase_rare.log"
+   shell:
+      """
+         echo "{input.chunks}" | sed 's/ /\n/g' | sort -t "_" -k1,1 -k2,2n > results/sort_and_concat_rare/rare_phase_chunks_{chr}.txt
+         
+      """
+
+rule concat_chrs:
+   input:
+      expand("results/sort_and_concat_rare/phased_chr{chr}.bcf", chr=range(1, 23))
+   output:
+      "results/phased_complete.bcf"
