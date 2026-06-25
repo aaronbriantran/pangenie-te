@@ -130,7 +130,7 @@ rule phase_common:
       gt_csi   = "results/split_target/combined_chr{chr}.bcf.csi",
       panel    = "results/split_panel/panel_chr{chr}.bcf",
       panel_csi= "results/split_panel/panel_chr{chr}.bcf.csi",
-      map_file = "inputs/maps/chr{chr}.gmap.gz",
+      map_file = "inputs/maps/chr{chr}.t2t.scaled.gmap.gz",
       pedigree = "config/family.fam"
    output:
       bcf = "results/phase_common/phased_{chr}.bcf",
