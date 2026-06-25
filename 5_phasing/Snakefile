@@ -64,7 +64,7 @@ rule combine_vcfs:
       mem_mb  = 500
    shell:
       # -m none keeps records biallelic (no multiallelic merging)
-      # --write-index writes index alongside output
+      # --write-index DEPRECATED, error with --threads flag in bcftools/1.19 and below
       # -Ob forces writing as a compressed bcf, which allows for the index to be written
       """
       ml samtools/1.18
@@ -72,9 +72,10 @@ rule combine_vcfs:
       bcftools merge \
          --threads {threads} \
          -m none \
-         --write-index \
          -Ob \
          -o {output.bcf} {input.gz} 2> {log}
+      
+      bcftools index -f --threads {threads} {output.bcf}
       """
 
 rule split_target_by_chr:
@@ -97,8 +98,9 @@ rule split_target_by_chr:
       bcftools view \
          --threads {threads} \
          -r chr{wildcards.chr} \
-         --write-index \
          -Ob -o {output.bcf} {input.bcf} 2> {log}
+      
+      bcftools index -f --threads {threads} {output.bcf}
       """
 
 rule split_panel_by_chr:
@@ -114,14 +116,16 @@ rule split_panel_by_chr:
       runtime = 60,
       mem_mb  = 1000
    shell:
-      #view each chromosome in compressed bcf format and write an index with -W
+      #view each chromosome in compressed bcf format
+      #index writing deprecated in bcftools/1.19 and below because of error with --threads
       """
       ml samtools/1.18
       ml bcftools/1.18
       bcftools view --threads {threads} \
          -r chr{wildcards.chr} \
-         --write-index \
          -Ob -o {output.bcf} {input.panel} 2> {log}
+
+      bcftools index -f --threads {threads} {output.bcf}
       """
 
 rule phase_common:
@@ -185,6 +189,7 @@ rule concat_chrs:
          --naive \
          -f tmp/input_bcf.txt \
          --threads {threads} \
-         --write-index \
          -Ob -o {output} {input.bcf} 2> {log}
+
+      bcftools index -f --threads {threads} {output.bcf}
       """
