@@ -115,11 +115,10 @@ rule fill_panel_tags:
       runtime=60,
       mem_mb=500,
    shell:
-      # force unload bcftools so that we can use my personal bcftools, along with its plugins
+      # module load does not happen, defaulting to my installation of bcftools
       """
-      module unload bcftools
-      bcftools view --threads {threads} -Ob -o {output} {input}
-      bcftools +fill-tags biallelic_v2.bcf -Ob -o biallelic_v2_filled.bcf -- -t AN,AC
+      bcftools view --threads {threads} -Ob -o {output} {input} 2> {log}
+      bcftools +fill-tags biallelic_v2.bcf -Ob -o biallelic_v2_filled.bcf -- -t AN,AC 2>> {log}
       """
 
 rule split_panel_by_chr:
