@@ -107,7 +107,7 @@ rule fill_panel_tags:
    input:
       panel = RAW_PANEL
    output:
-      bcf="results/fill_panel_tags/biallelic_v2.bcf"
+      bcf="results/fill_panel_tags/biallelic_v2.bcf",
       filled="results/fill_panel_tags/biallelic_v2_filled.bcf"
    log:
       "logs/fill_panel_tags.log"
