@@ -19,7 +19,7 @@ CHRS = [f"{i}" for i in range(1, 23)]
 
 SHAPEIT_BIN = "~/bin/shapeit/phase_common/bin" # the phase_common binary directory (need to build for each tool)
 PANGENIE_DIR = "/scratch/atran/final/3_pangenie/vcfs" #directory of Pangenie genotyping results
-RAW_PANEL = "/scratch/atran/final/3_pangenie/input_files/biallelic.vcf.gz" #HPRC VCF
+RAW_PANEL = "inputs/biallelic_v2.vcf.gz" #HPRC VCF
 
 rule all:
    input:
