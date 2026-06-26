@@ -107,7 +107,8 @@ rule fill_panel_tags:
    input:
       panel = RAW_PANEL
    output:
-      "results/fill_panel_tags/biallelic_v2_filled.bcf"
+      bcf="results/fill_panel_tags/biallelic_v2.bcf"
+      filled="results/fill_panel_tags/biallelic_v2_filled.bcf"
    log:
       "logs/fill_panel_tags.log"
    threads: 4
@@ -117,8 +118,8 @@ rule fill_panel_tags:
    shell:
       # module load does not happen, defaulting to my installation of bcftools
       """
-      bcftools view --threads {threads} -Ob -o {output} {input} 2> {log}
-      bcftools +fill-tags biallelic_v2.bcf -Ob -o biallelic_v2_filled.bcf -- -t AN,AC 2>> {log}
+      bcftools view --threads {threads} -Ob -o {output.bcf} {input} 2> {log}
+      bcftools +fill-tags {output.bcf} -Ob -o {output.filled} -- -t AN,AC 2>> {log}
       """
 
 rule split_panel_by_chr:
