@@ -120,6 +120,7 @@ rule fill_panel_tags:
       """
       bcftools view --threads {threads} -Ob -o {output.bcf} {input} 2> {log}
       bcftools +fill-tags {output.bcf} -Ob -o {output.filled} -- -t AN,AC 2>> {log}
+      bcftools index -f --threads {threads} {output.filled}
       """
 
 rule split_panel_by_chr:
