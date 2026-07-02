@@ -207,12 +207,12 @@ rule concat_chrs:
       """
       ml samtools/1.18
       ml bcftools/1.18
-      
+
       bcftools concat \
          --naive \
          -f tmp/input_bcf.txt \
          --threads {threads} \
-         -Ob -o {output} {input.bcf} 2> {log}
+         -Ob -o {output} 2> {log}
 
       bcftools index -f --threads {threads} {output} 2>> {log}
       """
