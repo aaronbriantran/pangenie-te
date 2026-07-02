@@ -78,7 +78,7 @@ rule combine_vcfs:
 
       module unload bcftools
 
-      bcftools +fill-tags {output.merged} -Ob -o {output.bcf} -- -t AN,AC 2>> {log}
+      bcftools +fixploidy {output.merged} -Ou | bcftools +fill-tags -Ob -o {output.bcf} - -- -t AN,AC 2>> {log}
       
       ml bcftools/1.18
       bcftools index -f --threads {threads} {output.bcf}
