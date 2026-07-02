@@ -217,5 +217,5 @@ rule concat_chrs:
          --threads {threads} \
          -Ob -o {output} {input.bcf} 2> {log}
 
-      bcftools index -f --threads {threads} {output.bcf}
+      bcftools index -f --threads {threads} {output}
       """
