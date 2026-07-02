@@ -186,8 +186,8 @@ rule phase_common:
          --log {log} \
          --thread {threads}
       ml samtools/1.18
-      ml bcftools/
-      bcftools index -f --threads {threads} {output.bcf}
+      ml bcftools/1.18
+      bcftools index -f --threads {threads} {output.bcf} 2>> {log}
       """
 
 rule concat_chrs:
