@@ -170,7 +170,7 @@ rule phase_common:
    threads: 12
    resources:
       runtime = 120,
-      mem_mb  = 1200
+      mem_mb  = 2400
    shell:
       # whole chr phasing, to avoid ligation
       # --filter-maf omitted so rare variants / MEIs are retained
