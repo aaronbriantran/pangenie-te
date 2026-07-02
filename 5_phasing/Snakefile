@@ -54,6 +54,7 @@ rule combine_vcfs:
       gz  = expand("results/index_vcfs/{sample}.vcf.gz", sample=SAMPLES),
       csi = expand("results/index_vcfs/{sample}.vcf.gz.csi", sample=SAMPLES)
    output:
+      merged = "results/combine_vcfs/merged.bcf"
       bcf = "results/combine_vcfs/combined.bcf",
       csi = "results/combine_vcfs/combined.bcf.csi"
    log:
@@ -73,8 +74,13 @@ rule combine_vcfs:
          --threads {threads} \
          -m none \
          -Ob \
-         -o {output.bcf} {input.gz} 2> {log}
+         -o {output.merged} {input.gz} 2> {log}
+
+      module unload bcftools
+
+      bcftools +fill-tags {output.merged} -Ob -o {output.bcf} -- -t AN,AC 2>> {log}
       
+      ml bcftools/1.18
       bcftools index -f --threads {threads} {output.bcf}
       """
 
