@@ -54,7 +54,7 @@ rule combine_vcfs:
       gz  = expand("results/index_vcfs/{sample}.vcf.gz", sample=SAMPLES),
       csi = expand("results/index_vcfs/{sample}.vcf.gz.csi", sample=SAMPLES)
    output:
-      merged = "results/combine_vcfs/merged.bcf"
+      merged = "results/combine_vcfs/merged.bcf",
       bcf = "results/combine_vcfs/combined.bcf",
       csi = "results/combine_vcfs/combined.bcf.csi"
    log:
