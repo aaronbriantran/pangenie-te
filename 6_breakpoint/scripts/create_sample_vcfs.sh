@@ -12,10 +12,7 @@ for sampName in $(bcftools query -l ../5_phasing/results/phased_complete.bcf 2> 
    tabix -p vcf "${total_samp_vcf}"
    for chr in {1..22}; do
       chr_split="results/create_sample_vcfs/${sampName}_chr${chr}.vcf.gz"
-      bcftools view \
-         -r "chr${chr}" \
-         -0z -o "${chr_split}" \
-         "${total_samp_vcf}"
+      bcftools view -r "chr${chr}" -Oz -o "${chr_split}" "${total_samp_vcf}"
       tabix -p vcf "${chr_split}"
    done
 done
