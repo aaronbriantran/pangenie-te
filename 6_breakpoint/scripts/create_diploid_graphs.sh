@@ -25,7 +25,7 @@ reference="/scratch/atran/final/3_pangenie/input_files/CHM13v11Y.fa"
 #that it then supplies to autoindex
 VCF_ARGS=()
 for CHROM in {1..22}; do
-    VCF_ARGS+=("-v results/create_sample_vcfs/${1}_chr${CHROM}.vcf.gz")
+    VCF_ARGS+=(-v results/create_sample_vcfs/${1}_chr${CHROM}.vcf.gz)
 done
 
 #include as many threads as chromosomes
