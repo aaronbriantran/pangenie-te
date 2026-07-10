@@ -16,7 +16,7 @@ set -e
 
 ml vg
 
-mkdir -p "results/create_diploid_graphs/{$2}"
+mkdir -p "results/create_diploid_graphs/${2}"
 
 reference="/scratch/atran/final/3_pangenie/input_files/CHM13v11Y.fa"
 
@@ -24,6 +24,6 @@ vg autoindex \
    -t "${SLURM_CPUS_PER_TASK}" \
    --target-mem "${SLURM_MEM_PER_NODE}" \
    --workflow giraffe \
-   --prefix "results/create_diploid_graphs/{$2}" \
+   --prefix "results/create_diploid_graphs/${2}" \
    --ref-fasta "${reference}" \
    --vcf "${1}"
