@@ -16,23 +16,23 @@ set -e
 
 ml vg
 
-mkdir -p "results/create_diploid_graphs/${2}"
+mkdir -p "results/create_diploid_graphs/${1}"
 
 reference="/scratch/atran/final/3_pangenie/input_files/CHM13v11Y.fa"
 
 #taken directly from "Mapping short reads with Giraffe" in the vg wiki
-#compiles 
+#compiles a bunch of the chr-subsetted vcfs into an array of flag strings
+#that it then supplies to autoindex
 VCF_ARGS=()
 for CHROM in {1..22}; do
-    VCF_ARGS+=("-v chr${CHROM}.vcf.gz")
+    VCF_ARGS+=("-v results/create_sample_vcfs/${1}_chr${CHROM}.vcf.gz")
 done
-vg autoindex "${VCF_ARGS[@]}" -p hs37d5-pangenome
 
-
+#include as many threads as chromosomes
 vg autoindex \
    -t "${SLURM_CPUS_PER_TASK}" \
    --target-mem "${SLURM_MEM_PER_NODE}" \
    --workflow giraffe \
-   --prefix "results/create_diploid_graphs/${2}" \
+   --prefix "results/create_diploid_graphs/${1}/${1}" \
    --ref-fasta "${reference}" \
    "${VCF_ARGS[@]}"
