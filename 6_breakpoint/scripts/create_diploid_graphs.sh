@@ -4,10 +4,10 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=22
-#SBATCH --time=01:00:00
+#SBATCH --time=05:00:00
 #SBATCH --output=logs/create_diploid_graphs.log
 #SBATCH --error=logs/create_diploid_graphs.err
-#SBATCH --mem=15G
+#SBATCH --mem=200G
 
 
 set -e

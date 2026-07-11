@@ -3,20 +3,17 @@
 #SBATCH --partition=general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=22
-#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=32
+#SBATCH --time=10:00:00
 #SBATCH --output=logs/map_reads.log
 #SBATCH --error=logs/map_reads.err
-#SBATCH --mem=15G
+#SBATCH --mem=150G
 
-#TODO: fix compute requests
-
-read1=''
-read2=''
-index_prefix=results/create_diploid_graphs/${1}/${1}
+read1="/scratch/atran/final/1_reads/wgs/F1_1_WGS_MGI_L001_R1.fastq"
+read2="/scratch/atran/final/1_reads/wgs/F1_1_WGS_MGI_L001_R2.fastq"
+index_prefix="results/create_diploid_graphs/${1}/${1}"
 
 #TODO fix pathing to inputs, wait for other scripts first
-# basically just seeing if the xg is created with the right naming convention
 
 mkdir -p results/map_reads
 
@@ -24,8 +21,7 @@ vg giraffe \
    --progress \
    -t "${SLURM_CPUS_PER_TASK}" \
    -d "${index_prefix}.dist" \
-   -z "${index_prefix}.shortread.zipcodes" \
-   -m "${index_prefix}.shortread.withzip.min" \
-   -x "${index_prefix}.xg" \
+   -Z "${index_prefix}.giraffe.gbz" \
+   -m "${index_prefix}.min" \
     -i -f "${read1}" -f "${read2}" \
     -o BAM -b default > "results/map_reads/${1}.bam"
