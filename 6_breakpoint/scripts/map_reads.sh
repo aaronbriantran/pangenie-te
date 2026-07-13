@@ -4,9 +4,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
-#SBATCH --time=10:00:00
-#SBATCH --output=logs/map_reads.log
-#SBATCH --error=logs/map_reads.err
+#SBATCH --time=1:30:00
+#SBATCH --output=logs/map_reads_gam.log
+#SBATCH --error=logs/map_reads_gam.err
 #SBATCH --mem=60G
 
 read1="/scratch/atran/final/1_reads/wgs/F1_1_WGS_MGI_L001_R1.fastq"
@@ -24,4 +24,4 @@ vg giraffe \
    -Z "${index_prefix}.giraffe.gbz" \
    -m "${index_prefix}.min" \
    -f "${read1}" -f "${read2}" \
-   -o BAM -b default > "results/map_reads/${1}.bam"
+   -o GAM -b default > "results/map_reads/${1}.gam"
