@@ -13,8 +13,7 @@
 set -e
 # set -e is important: it tells bash to exit if any errors occur. Otherwise bash will continue executing commands after error.
 
-
-ml vg/1.49.0
+module unload vg
 
 out_dir=results/manual_diploid_graphs/${1}
 mkdir -p "${out_dir}"
