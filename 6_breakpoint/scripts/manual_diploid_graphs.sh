@@ -37,14 +37,15 @@ done
 #needs some modifications though!
 
 #construct from all the indexed vcfs
-vg construct -t "${SLURM_CPUS_PER_TASK}" -a -r "${reference}" "${VCF_FLAGS[@]}" > "${out_dir}/${1}.vg"
+#vg construct -t "${SLURM_CPUS_PER_TASK}" -a -r "${reference}" "${VCF_FLAGS[@]}" > "${out_dir}/${1}.vg"
 
 #create the xg
-vg index -t "${SLURM_CPUS_PER_TASK}" "${out_dir}/${1}.vg" -L -x "${out_dir}/${1}.xg"
+#vg index -t "${SLURM_CPUS_PER_TASK}" "${out_dir}/${1}.vg" -L -x "${out_dir}/${1}.xg"
 
 #create the gbwt (not from vg index, but vg gbwt)
-#TODO: don't load VCF flags, instead pass VCFs as arguments directly!
-vg gbwt --num-threads "${SLURM_CPUS_PER_TASK}" -x "${out_dir}/${1}.xg" -o "${out_dir}/${1}.gbwt" "${VCF_ARGS[@]}" 
+#this line uses one flag but passes a bunch of strings to it simultaneously, based on:
+#https://github.com/vgteam/vg/wiki/VG-GBWT-Subcommand#construction-from-phased-vcf-files
+vg gbwt --num-threads "${SLURM_CPUS_PER_TASK}" -x "${out_dir}/${1}.xg" -o "${out_dir}/${1}.gbwt" -v "${VCF_ARGS[@]}" 
 
 #load the gbwt as an argument, take an input xg graph, and create a GBZ graph
 vg gbwt --num-threads "${SLURM_CPUS_PER_TASK}" -x "${out_dir}/${1}.xg" "${out_dir}/${1}.gbwt" -g "${out_dir}/${1}.gbz" --gbz-format
