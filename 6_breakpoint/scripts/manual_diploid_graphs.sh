@@ -54,4 +54,4 @@ vg gbwt --num-threads "${SLURM_CPUS_PER_TASK}" -x "${out_dir}/${1}.xg" "${out_di
 vg index -t "${SLURM_CPUS_PER_TASK}" -j "${out_dir}/${1}.dist" "${out_dir}/${1}.gbz"
 
 #create the minimizer index
-vg minimizer test.gbz -t "${out_dir}/${1}.gbz" -d "${out_dir}/${1}.dist" -o "${out_dir}/${1}.withzip.min" -z "${out_dir}/${1}.zipcodes"
+vg minimizer "${out_dir}/${1}.gbz" -t 16 -d "${out_dir}/${1}.dist" -o "${out_dir}/${1}.withzip.min" -z "${out_dir}/${1}.zipcodes"

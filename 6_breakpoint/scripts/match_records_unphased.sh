@@ -19,4 +19,4 @@ awk 'BEGIN{FS=OFS="\t"}
   out=$1
   for(i=2;i<=17;i++) out=out OFS $i
   print out
-}' ${1} > ${2}
+}' ${results}/any_unphased_repeat_intersect.txt > ${results}/unphased_matched_vcf_body.txt
