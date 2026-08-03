@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=dip_genotype
+#SBATCH --job-name=dip_genotype_total
 #SBATCH --partition=general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -14,10 +14,10 @@ out_dir=results/pack_and_gtype/${1}
 
 mkdir -p "${out_dir}"
 
-VCF_FLAGS=()
-for CHROM in {1..22}; do
-   VCF_FLAGS+=(-v results/create_sample_vcfs/${1}_chr${CHROM}.vcf.gz)
-done
+#VCF_FLAGS=()
+#for CHROM in {1..22}; do
+#   VCF_FLAGS+=(-v results/create_sample_vcfs/${1}_chr${CHROM}.vcf.gz)
+#done
 
 # Compute the read support (use -a instead of -g for .gaf.gz input)
 # right mapping quality filter?
@@ -25,4 +25,4 @@ vg pack -t "${SLURM_CPUS_PER_TASK}" -x "${in_dir}/${1}.xg" -g results/map_reads_
 
 # Genotype the graph (add -a to genotype all sites including 0/0)
 # The -z option restricts possible alleles to haplotypes in the GBZ which is usually faster and more accurate but only applies to GBZ input
-vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}.pack" -s "${1}" "${VCF_FLAGS[@]}" > "${out_dir}/${1}.vcf"
+vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}.pack" -s "${1}" -v ../5_phasing/results/phased_complete.bcf > "${out_dir}/${1}.vcf"
