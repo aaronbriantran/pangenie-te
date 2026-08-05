@@ -25,4 +25,4 @@ vg pack -t "${SLURM_CPUS_PER_TASK}" -x "${in_dir}/${1}.xg" -g results/map_reads_
 
 # Genotype the graph (add -a to genotype all sites including 0/0)
 # The -z option restricts possible alleles to haplotypes in the GBZ which is usually faster and more accurate but only applies to GBZ input
-vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}_total.pack" -s "${1}" -v results/create_sample_vcfs/F1.vcf.gz > "${out_dir}/${1}_total.vcf"
+vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}.pack" -s "${1}" -v "results/create_sample_vcfs/${1}.vcf.gz" > "${out_dir}/${1}.vcf"
