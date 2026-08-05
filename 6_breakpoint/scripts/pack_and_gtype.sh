@@ -21,8 +21,8 @@ mkdir -p "${out_dir}"
 
 # Compute the read support (use -a instead of -g for .gaf.gz input)
 # right mapping quality filter?
-vg pack -t "${SLURM_CPUS_PER_TASK}" -x "${in_dir}/${1}.xg" -g results/map_reads_gtyped/F1.gam -o "${out_dir}/${1}.pack" -Q 5
+#vg pack -t "${SLURM_CPUS_PER_TASK}" -x "${in_dir}/${1}.xg" -g results/map_reads_gtyped/F1.gam -o "${out_dir}/${1}.pack" -Q 5
 
 # Genotype the graph (add -a to genotype all sites including 0/0)
 # The -z option restricts possible alleles to haplotypes in the GBZ which is usually faster and more accurate but only applies to GBZ input
-vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}.pack" -s "${1}" -v ../5_phasing/results/phased_complete.bcf > "${out_dir}/${1}.vcf"
+vg call -t "${SLURM_CPUS_PER_TASK}" "${in_dir}/${1}.xg" -k "${out_dir}/${1}.pack" -s "${1}" -v "results/create_sample_vcfs/${1}.vcf.gz" > "${out_dir}/${1}.vcf"
