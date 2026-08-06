@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bcftools view -i "GT='alt' && ID ~ 'INS'" ${1} | awk 'BEGIN{FS="\t"}
+bcftools view -H -i "GT='alt' && ID ~ 'INS'" ${1} | awk 'BEGIN{FS="\t"}
 {
   print ">" $3
   print $5
