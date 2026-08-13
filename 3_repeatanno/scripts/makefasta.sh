@@ -2,6 +2,6 @@
 
 bcftools view -H -i "GT='alt' && ID ~ 'INS'" ${1} | awk 'BEGIN{FS="\t"}
 {
-  print ">" $3
+  print ">" NR
   print $5
 }' > results/pangenie_total_ins.fa
