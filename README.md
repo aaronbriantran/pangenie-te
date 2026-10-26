@@ -1,11 +1,11 @@
 # Pangenie TE Analysis
 
-This repository includes code related to work for identifying eQTLs in an ASE analysis of polymorphic TEs, taken from a family duo of iPSCs as described in Quaid et al. (2025).
+This repository includes code related to work for identifying eQTLs in an ASE analysis of polymorphic TEs, taken from a family duo of iPSCs as described in Quaid et al. (2025). The following describes the ideal pipeline:
 
 <img width="1331" height="486" alt="image" src="https://github.com/user-attachments/assets/00e1369b-7177-44fe-8905-8a5b626ffb54" />
 
 
-In this analysis, we:
+This analysis was not finished. In this code, I:
 
 1. impute all variants, including structural variants, via PanGenie and the human pangenome (HPRCv1.1)
 2. annotate variants via RepeatMasker
@@ -43,6 +43,15 @@ It takes the VCF samples, combines them, indexes it, and fills its AN and AC tag
 The inputs (recombination maps and family files) were adapted separately. Since this is only a duo, a family file is trivial to construct alone. The recombination map refers to a recombination map for the T2T assembly (Lalli, Bortvin, McCoy, and Werling 2025).
 
 ### Breakpoint
+In <code>6_breakpoint</code>, I use vg to construct a diploid graph based off of the genotyped variants from PanGenie. I can then map reads from the WGS fasta directly onto the diploid graph with a reference backbone and then call variants and see if the called variants are concordant with the genotyped variants.
+
+This works off the assumption that reads for TEs probably do not map in the interior of the TEs due to their repetitive nature (there should be natural multimapping in polymorphic TEs across TE loci). Therefore, we can assert that reads should pile up at the breakpoints of the polymorphic TE insertions. These half-reference reads should thus inform vg if the variant can be called compared to the reference backbone at a given locus.
+
+It is possible that the pileup is not at the breakpoint. It is possible to use a chain file along with bedtools to check pileups adjusted for the size changes from SVs. I would prefer to use vg to visualize pileups, but I have not found a tool in vg that makes that easy.
+
+### Analysis and Decisions
+Much of this pipeline included hidden decisions that would be useful for anyone interested in adapting this code or making a pipeline like this for themselves. The scripts <code>filter_eval_3.ipynb</code> and <code>plotting_gq_uk.ipynb</code> respectively describe why I dropped checking flanking sequence in RepeatMasker and why I dropped filtering for GQ when looking at PanGenie calls.
+
 
 
 ## Results
