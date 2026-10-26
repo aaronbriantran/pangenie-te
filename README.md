@@ -49,11 +49,16 @@ This works off the assumption that reads for TEs probably do not map in the inte
 
 It is possible that the pileup is not at the breakpoint. It is possible to use a chain file along with bedtools to check pileups adjusted for the size changes from SVs. I would prefer to use vg to visualize pileups, but I have not found a tool in vg that makes that easy.
 
-### Analysis and Decisions
-Much of this pipeline included hidden decisions that would be useful for anyone interested in adapting this code or making a pipeline like this for themselves. The scripts <code>filter_eval_3.ipynb</code> and <code>plotting_gq_uk.ipynb</code> respectively describe why I dropped checking flanking sequence in RepeatMasker and why I dropped filtering for GQ when looking at PanGenie calls.
+### Analysis, Decisions, and Results
+Much of this pipeline included hidden decisions that would be useful for anyone interested in adapting this code or making a pipeline like this for themselves
 
+The scripts <code>filter_eval_3.ipynb</code> and <code>plotting_gq_uk.ipynb</code> respectively describe why I dropped checking flanking sequence in RepeatMasker and why I dropped filtering for GQ when looking at PanGenie calls. There are also some summary statistics for TEs.
 
+Of additional interest will be the work I did after figuring out the breakpoint analyses and seeing what TEs remain phased. The files in <code>lab_notebook</code> describe:
 
-## Results
+- 5AUG2026 describes the concordance of breakpoint vg calls with PanGenie genotypes.
+- 13JUL2026 describes how to overlap identified TEs with consensus TEs in HPRCv2 described in Xiaoyu Zhuo's pipeline [INTACT_MEI](https://github.com/xzhuo/INTACT_MEI/tree/main), which is cited within.
+- 20JUL2026 and 21JUL2026 put together everything. Check here for numbers on phased, consensus, breakpoint-validated TEs.
+- AUG13_2026 describes running Xiaoyu's L1ME-AID pipeline directly on my own data, and checking whether there is any overlap between my and Xiaoyu's annotations. This attempts to remove the effects any possible issues my own workflow would have.
 
 ## Future
