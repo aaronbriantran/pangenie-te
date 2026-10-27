@@ -5,7 +5,7 @@ This repository includes code related to work for identifying eQTLs in an ASE an
 
 <img width="1331" height="486" alt="image" src="https://github.com/user-attachments/assets/00e1369b-7177-44fe-8905-8a5b626ffb54" />
 
-The context of this work is described in <code>litreview.md</code>.
+For the background context and literature of this work, see <code>litreview.md</code> for a complete writeup.
 
 ## Code
 This analysis was not finished. In this code, I:
