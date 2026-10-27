@@ -1,10 +1,13 @@
 # Pangenie TE Analysis
 
+## Context
 This repository includes code related to work for identifying eQTLs in an ASE analysis of polymorphic TEs, taken from a family duo of iPSCs as described in Quaid et al. (2025). The following describes the ideal pipeline:
 
 <img width="1331" height="486" alt="image" src="https://github.com/user-attachments/assets/00e1369b-7177-44fe-8905-8a5b626ffb54" />
 
+The context of this work is described in <code>litreview.md</code>.
 
+## Code
 This analysis was not finished. In this code, I:
 
 1. impute all variants, including structural variants, via PanGenie and the human pangenome (HPRCv1.1)
